@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  app:
+    build: 
+      dockerfile: ./Dockerfile
+    command: 
+      - gunicorn 
+      - conf.wsgi:application 
+      - --bind
+      - 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    restart: always
+    env_file:
+      - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "3"
+        max-size: "200"
+    depends_on:
+      - pgdb
+    volumes:
+      - ./data:/var/lib/postgresql/data
+  
+  pgdb:
+    image: postgres:11
+    container_name: pgdb
+    environment:
+      - POSTGRES_DB=sms_service
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123
+      - POSTGRES_PORT=5432
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+
+  pgadmin:
+      image: dpage/pgadmin4:latest
+      container_name: pgadmin
+      depends_on:
+        - pgdb
+      environment:
+        PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+        PGADMIN_DEFAULT_PASSWORD: ubuntu
+        PGADMIN_LISTEN_PORT: 90      
+      ports:
+        - 8080:90
+      restart: always
